@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { ArrowDown, MessageCircle, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { ArrowDown, MessageCircle, ShieldCheck, Sparkles, Zap, Award, CheckCircle2, TrendingUp } from 'lucide-react';
 import { getSellAccountWhatsAppUrl } from '@/lib/whatsapp';
 
 interface HeroSectionProps {
@@ -35,7 +35,7 @@ export default function HeroSection({
   const hasVideo = videoEnabled && videoUrl && videoUrl.trim().length > 0;
 
   return (
-    <section className="relative w-full min-h-[85vh] lg:min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-[#1E2C4A]">
+    <section className="relative w-full min-h-[90vh] flex items-center justify-center overflow-hidden border-b border-[#1E2C4A]">
       {/* Background Media Container */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         {hasVideo ? (
@@ -57,7 +57,7 @@ export default function HeroSection({
         {/* Fallback & Base High-Impact Poster Image */}
         <div
           className={`absolute inset-0 transition-opacity duration-700 ${
-            hasVideo && videoLoaded ? 'opacity-30' : 'opacity-65'
+            hasVideo && videoLoaded ? 'opacity-30' : 'opacity-70'
           }`}
         >
           <Image
@@ -71,7 +71,7 @@ export default function HeroSection({
         </div>
 
         {/* Cyber Dark Esports Gradients & Lighting */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#080D1A] via-[#080D1A]/75 to-[#080D1A]/90" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#080D1A] via-[#080D1A]/80 to-[#080D1A]/90" />
         <div className="absolute inset-0 bg-radial-glow opacity-80 pointer-events-none" />
         <div className="absolute inset-0 bg-cyber-grid opacity-30 pointer-events-none" />
       </div>
@@ -85,7 +85,7 @@ export default function HeroSection({
         </div>
 
         {/* Main Heading */}
-        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.1] mb-6 max-w-4xl">
+        <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.1] mb-6 max-w-4xl drop-shadow-2xl">
           {title.includes('Legendary FF Account') ? (
             <>
               Find Your Next <br className="hidden sm:inline" />
@@ -104,12 +104,12 @@ export default function HeroSection({
         </p>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-14">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto mb-12">
           {/* Primary CTA: Explore Accounts */}
           <button
             type="button"
             onClick={scrollToAccounts}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-base font-extrabold text-white bg-gradient-to-r from-[#2563FF] to-[#00A3FF] hover:from-[#1D4ED8] hover:to-[#0284C7] shadow-xl shadow-[#00A3FF]/30 hover:shadow-[#00A3FF]/50 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 rounded-xl text-base font-extrabold text-white bg-gradient-to-r from-[#2563FF] to-[#00A3FF] hover:from-[#1D4ED8] hover:to-[#0284C7] shadow-xl shadow-[#00A3FF]/30 hover:shadow-[#00A3FF]/50 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
           >
             <Zap className="w-5 h-5 text-yellow-300" />
             <span>Explore Accounts</span>
@@ -128,19 +128,23 @@ export default function HeroSection({
           </a>
         </div>
 
-        {/* Feature Pills */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 pt-4 border-t border-[#1E2C4A]/50 w-full max-w-3xl">
-          <div className="flex items-center justify-center gap-2.5 px-3 py-2 rounded-lg bg-[#111A2E]/50 border border-[#1E2C4A]/60 text-xs sm:text-sm font-semibold text-slate-300">
-            <ShieldCheck className="w-4 h-4 text-[#00A3FF]" />
-            <span>100% Legit & Verified</span>
+        {/* Live Marketplace Proof Stats Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full max-w-4xl pt-8 border-t border-[#1E2C4A]/60">
+          <div className="p-3.5 rounded-xl bg-[#111A2E]/60 border border-[#1E2C4A]/80 backdrop-blur-md">
+            <span className="block text-2xl font-black text-white font-mono">1,250+</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Accounts Traded</span>
           </div>
-          <div className="flex items-center justify-center gap-2.5 px-3 py-2 rounded-lg bg-[#111A2E]/50 border border-[#1E2C4A]/60 text-xs sm:text-sm font-semibold text-slate-300">
-            <MessageCircle className="w-4 h-4 text-emerald-400" />
-            <span>WhatsApp Escrow Transfer</span>
+          <div className="p-3.5 rounded-xl bg-[#111A2E]/60 border border-[#1E2C4A]/80 backdrop-blur-md">
+            <span className="block text-2xl font-black text-emerald-400 font-mono">100%</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Safe Escrow</span>
           </div>
-          <div className="col-span-2 md:col-span-1 flex items-center justify-center gap-2.5 px-3 py-2 rounded-lg bg-[#111A2E]/50 border border-[#1E2C4A]/60 text-xs sm:text-sm font-semibold text-slate-300">
-            <Zap className="w-4 h-4 text-yellow-400" />
-            <span>Instant Access Handover</span>
+          <div className="p-3.5 rounded-xl bg-[#111A2E]/60 border border-[#1E2C4A]/80 backdrop-blur-md">
+            <span className="block text-2xl font-black text-[#00A3FF] font-mono">₦0</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Buyer Fee</span>
+          </div>
+          <div className="p-3.5 rounded-xl bg-[#111A2E]/60 border border-[#1E2C4A]/80 backdrop-blur-md">
+            <span className="block text-2xl font-black text-amber-400 font-mono">4.9 ★</span>
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Customer Rating</span>
           </div>
         </div>
       </div>

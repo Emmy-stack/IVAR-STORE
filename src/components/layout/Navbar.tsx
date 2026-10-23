@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Shield, MessageCircle, ExternalLink, Flame } from 'lucide-react';
+import { Menu, X, Shield, MessageCircle, ExternalLink, Flame, ShieldCheck, Zap } from 'lucide-react';
 import { getSellAccountWhatsAppUrl } from '@/lib/whatsapp';
 
 interface NavbarProps {
@@ -10,12 +10,31 @@ interface NavbarProps {
   telegramUrl?: string;
 }
 
-export default function Navbar({ whatsappNumber }: NavbarProps) {
+export default function Navbar({ whatsappNumber = '07041545267' }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const sellUrl = getSellAccountWhatsAppUrl(whatsappNumber);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#1E2C4A]/80 bg-[#080D1A]/90 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-[#1E2C4A]/80 bg-[#080D1A]/95 backdrop-blur-md">
+      {/* Top Esports Ticker Bar */}
+      <div className="w-full bg-[#111A2E] border-b border-[#1E2C4A]/60 py-1.5 px-4 text-[11px] text-[#94A3B8] hidden sm:block">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <ShieldCheck className="w-3.5 h-3.5" /> 100% WhatsApp Escrow Transfer
+            </span>
+            <span className="text-slate-600">•</span>
+            <span className="flex items-center gap-1.5 text-cyan-300">
+              <Zap className="w-3.5 h-3.5 text-yellow-400" /> Instant Account Handover
+            </span>
+          </div>
+
+          <div className="flex items-center gap-4 text-slate-400">
+            <span>Direct WhatsApp: <strong className="text-white font-mono">{whatsappNumber}</strong></span>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Brand Logo */}
@@ -39,21 +58,21 @@ export default function Navbar({ whatsappNumber }: NavbarProps) {
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="/"
-              className="text-sm font-medium text-slate-300 hover:text-[#00A3FF] transition-colors"
+              className="text-sm font-semibold text-slate-300 hover:text-[#00A3FF] transition-colors"
             >
               Home
             </Link>
             <Link
               href="/#accounts-section"
-              className="text-sm font-medium text-slate-300 hover:text-[#00A3FF] transition-colors"
+              className="text-sm font-semibold text-slate-300 hover:text-[#00A3FF] transition-colors"
             >
               Available Accounts
             </Link>
             <Link
               href="/#contact-section"
-              className="text-sm font-medium text-slate-300 hover:text-[#00A3FF] transition-colors"
+              className="text-sm font-semibold text-slate-300 hover:text-[#00A3FF] transition-colors"
             >
-              Contact
+              Contact & Escrow
             </Link>
           </nav>
 
@@ -63,7 +82,7 @@ export default function Navbar({ whatsappNumber }: NavbarProps) {
               href={sellUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="relative group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold text-white overflow-hidden transition-all duration-300 bg-gradient-to-r from-[#2563FF] to-[#00A3FF] hover:from-[#1D4ED8] hover:to-[#0284C7] shadow-lg shadow-[#2563FF]/25 hover:shadow-[#00A3FF]/40 hover:-translate-y-0.5"
+              className="relative group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-white overflow-hidden transition-all duration-300 bg-gradient-to-r from-[#2563FF] to-[#00A3FF] hover:from-[#1D4ED8] hover:to-[#0284C7] shadow-lg shadow-[#2563FF]/30 hover:shadow-[#00A3FF]/50 hover:-translate-y-0.5"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Want to Sell Your Account?</span>
@@ -87,7 +106,7 @@ export default function Navbar({ whatsappNumber }: NavbarProps) {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#1E2C4A] bg-[#080D1A]/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2">
+        <div className="md:hidden border-b border-[#1E2C4A] bg-[#080D1A]/98 backdrop-blur-xl px-4 pt-3 pb-6 space-y-3 animate-in slide-in-from-top-2">
           <Link
             href="/"
             onClick={() => setMobileMenuOpen(false)}

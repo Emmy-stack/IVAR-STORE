@@ -134,6 +134,76 @@ export default function AccountListingSection({ initialAccounts }: AccountListin
           </div>
         </div>
 
+        {/* Quick Filter Presets */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-4 scrollbar-none">
+          <button
+            type="button"
+            onClick={resetFilters}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              !hasActiveFilters
+                ? 'bg-gradient-to-r from-[#2563FF] to-[#00A3FF] text-white shadow-md shadow-[#00A3FF]/25'
+                : 'bg-[#111A2E] text-slate-400 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            🔥 All Accounts
+          </button>
+          <button
+            type="button"
+            onClick={() => { resetFilters(); setSelectedRank('Grandmaster'); }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              selectedRank === 'Grandmaster'
+                ? 'bg-gradient-to-r from-red-600 to-amber-500 text-white shadow-md'
+                : 'bg-[#111A2E] text-slate-300 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            👑 Grandmaster
+          </button>
+          <button
+            type="button"
+            onClick={() => { resetFilters(); setSelectedRank('Master'); }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              selectedRank === 'Master'
+                ? 'bg-purple-600 text-white shadow-md'
+                : 'bg-[#111A2E] text-slate-300 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            ⭐ Master Rank
+          </button>
+          <button
+            type="button"
+            onClick={() => { resetFilters(); setSearchQuery('Draco'); }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              searchQuery === 'Draco'
+                ? 'bg-cyan-600 text-white shadow-md'
+                : 'bg-[#111A2E] text-slate-300 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            ⚡ Max Evo Draco
+          </button>
+          <button
+            type="button"
+            onClick={() => { resetFilters(); setSearchQuery('Sakura'); }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              searchQuery === 'Sakura'
+                ? 'bg-pink-600 text-white shadow-md'
+                : 'bg-[#111A2E] text-slate-300 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            🌸 Season 1 Sakura
+          </button>
+          <button
+            type="button"
+            onClick={() => { resetFilters(); setMaxPrice('70000'); }}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all cursor-pointer ${
+              maxPrice === '70000'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-[#111A2E] text-slate-300 hover:text-white border border-[#1E2C4A]'
+            }`}
+          >
+            💸 Under ₦70,000
+          </button>
+        </div>
+
         {/* Filter & Search Bar */}
         <div className="rounded-2xl bg-[#111A2E] border border-[#1E2C4A] p-4 sm:p-5 mb-8 shadow-xl">
           {/* Top Search & Filter Toggle Row */}
