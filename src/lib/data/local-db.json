@@ -1,0 +1,194 @@
+{
+  "accounts": [
+    {
+      "id": "a1000000-0000-0000-0000-000000000001",
+      "product_id": "IVAR-FF-0001",
+      "slug": "grandmaster-ak47-blue-flame-draco-max",
+      "title": "Level 85 Grandmaster | AK47 Blue Flame Draco (Max Lv 7) + Cyber Legend Bundle",
+      "description": "Ultimate high-tier Free Fire account. Fully maxed AK47 Blue Flame Draco Evo Gun with full dragon kill effects, exclusive Cyber Legend illuminated bundle, Grandmaster badge, and high K/D ratio. Clean email bind, fast delivery.",
+      "price": 85000,
+      "level": 85,
+      "rank": "Grandmaster",
+      "skin_count": 145,
+      "bundle_count": 62,
+      "rare_skins": [
+        "AK47 Blue Flame Draco (Lv 7 Max)",
+        "M1014 Green Flame Draco",
+        "SCAR Megalodon Alpha (Lv 5)",
+        "Gloowall Cyber Shield"
+      ],
+      "rare_bundles": [
+        "Cyber Legend Suit",
+        "Arctic Blue Bundle",
+        "Shadow Earthshaker"
+      ],
+      "emotes": [
+        "Dragon Roar",
+        "Doggie Dance",
+        "Throne Emote",
+        "Flowers of Love"
+      ],
+      "weapons": [
+        "AK47 Draco",
+        "M1014 Draco",
+        "AWM Swallowtail",
+        "Katana Blood Moon"
+      ],
+      "tags": [
+        "Grandmaster",
+        "Evo Gun Max",
+        "Rare Bundle",
+        "High Level"
+      ],
+      "status": "available",
+      "published": true,
+      "featured": true,
+      "created_at": "2026-10-23T10:00:00Z",
+      "updated_at": "2026-10-23T10:00:00Z",
+      "images": [
+        {
+          "id": "b1000000-0000-0000-0000-000000000001",
+          "account_id": "a1000000-0000-0000-0000-000000000001",
+          "storage_path": "/images/sample-acc-1.jpg",
+          "sort_order": 0,
+          "is_primary": true
+        },
+        {
+          "id": "b1000000-0000-0000-0000-000000000002",
+          "account_id": "a1000000-0000-0000-0000-000000000001",
+          "storage_path": "/images/sample-acc-3.jpg",
+          "sort_order": 1,
+          "is_primary": false
+        }
+      ]
+    },
+    {
+      "id": "a2000000-0000-0000-0000-000000000002",
+      "product_id": "IVAR-FF-0002",
+      "slug": "og-season-1-sakura-bundle-master-rank",
+      "title": "OG Season 1 Sakura Bundle | Master Rank IV | Rare Collector Locker",
+      "description": "Super rare OG collection account featuring the coveted Season 1 Elite Pass Sakura Bundle and matching kimono accessories. Master Rank IV with 4,850+ rank points, Evo M1014, and 28,000+ diamonds badge history.",
+      "price": 120000,
+      "level": 72,
+      "rank": "Master",
+      "skin_count": 198,
+      "bundle_count": 84,
+      "rare_skins": [
+        "Evo M1014 Green Flame",
+        "AWM Wavebreaker",
+        "Katana Sakura Bloom"
+      ],
+      "rare_bundles": [
+        "Season 1 Sakura Bundle (Full OG)",
+        "Hip Hop Season 2 Hat",
+        "Red Criminal Mask"
+      ],
+      "emotes": [
+        "Tea Time",
+        "Selfie",
+        "Arm Wave",
+        "Push Up"
+      ],
+      "weapons": [
+        "M1014 Evo",
+        "Groza Operano",
+        "Desert Eagle Golden"
+      ],
+      "tags": [
+        "OG Sakura",
+        "Season 1",
+        "Master",
+        "Collector"
+      ],
+      "status": "available",
+      "published": true,
+      "featured": true,
+      "created_at": "2026-10-23T11:00:00Z",
+      "updated_at": "2026-10-23T11:00:00Z",
+      "images": [
+        {
+          "id": "b2000000-0000-0000-0000-000000000001",
+          "account_id": "a2000000-0000-0000-0000-000000000002",
+          "storage_path": "/images/sample-acc-2.jpg",
+          "sort_order": 0,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "a3000000-0000-0000-0000-000000000003",
+      "product_id": "IVAR-FF-0003",
+      "slug": "level-78-heroic-predatory-cobra-mp40",
+      "title": "Level 78 Heroic Rank | MP40 Predatory Cobra + 15 Evo Guns Arsenal",
+      "description": "Stacked competitive weapon locker account. Includes MP40 Predatory Cobra, AK47 Blue Flame Draco, Katana Blood Moon, and 45+ gun skins with boosted damage attributes. Ideal for Clash Squad and Tournament scrims.",
+      "price": 65000,
+      "level": 78,
+      "rank": "Heroic",
+      "skin_count": 112,
+      "bundle_count": 48,
+      "rare_skins": [
+        "MP40 Predatory Cobra (Lv 6)",
+        "SCAR Megalodon Alpha",
+        "Katana Blood Moon",
+        "M1014 Green Flame"
+      ],
+      "rare_bundles": [
+        "Crimson Knight Bundle",
+        "Street Boy Bundle",
+        "Samurai Bundle"
+      ],
+      "emotes": [
+        "Cobra Dance",
+        "Sitar Solo",
+        "Eat My Dust",
+        "Pirate Flag"
+      ],
+      "weapons": [
+        "MP40 Cobra",
+        "AK47 Draco",
+        "Katana Blood Moon",
+        "UMP Wilderness Hunter"
+      ],
+      "tags": [
+        "Heroic",
+        "MP40 Cobra",
+        "Competitive",
+        "Fast Delivery"
+      ],
+      "status": "available",
+      "published": true,
+      "featured": false,
+      "created_at": "2026-10-23T12:00:00Z",
+      "updated_at": "2026-10-23T12:00:00Z",
+      "images": [
+        {
+          "id": "b3000000-0000-0000-0000-000000000001",
+          "account_id": "a3000000-0000-0000-0000-000000000003",
+          "storage_path": "/images/sample-acc-3.jpg",
+          "sort_order": 0,
+          "is_primary": true
+        },
+        {
+          "id": "b3000000-0000-0000-0000-000000000002",
+          "account_id": "a3000000-0000-0000-0000-000000000003",
+          "storage_path": "/images/sample-acc-1.jpg",
+          "sort_order": 1,
+          "is_primary": false
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "id": "default",
+    "hero_video_url": "",
+    "hero_poster_url": "/images/hero-poster.jpg",
+    "hero_title": "Find Your Next Legendary FF Account.",
+    "hero_subtitle": "Discover rare bundles, exclusive skins, and legendary collections.",
+    "hero_video_enabled": true,
+    "whatsapp_number": "07041545267",
+    "telegram_number": "07047673903",
+    "telegram_url": "https://t.me/ivarstore",
+    "sell_account_message": "Hey, I want to sell my account...",
+    "updated_at": "2026-10-23T10:00:00Z"
+  }
+}

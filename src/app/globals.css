@@ -1,26 +1,151 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --electric-blue: #2563FF;
+    --bright-cyan: #00A3FF;
+    --deep-navy: #080D1A;
+    --card-bg: #111A2E;
+    --card-border: #1E2C4A;
+    --card-border-hover: #2563FF;
+    --white: #F8FAFC;
+    --muted-text: #94A3B8;
+  }
+
+  * {
+    border-color: #1E2C4A;
+  }
+
+  body {
+    background-color: #080D1A;
+    color: #F8FAFC;
+    font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Custom esports scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #080D1A;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1E2C4A;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 163, 255, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2563FF;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Gaming Aesthetic Custom Utilities */
+.bg-deep-navy {
+  background-color: #080D1A;
+}
+
+.bg-card-bg {
+  background-color: #111A2E;
+}
+
+.border-card-border {
+  border-color: #1E2C4A;
+}
+
+.text-electric-blue {
+  color: #2563FF;
+}
+
+.text-bright-cyan {
+  color: #00A3FF;
+}
+
+.text-muted-text {
+  color: #94A3B8;
+}
+
+/* Glow effects */
+.glow-cyan-sm {
+  box-shadow: 0 0 15px rgba(0, 163, 255, 0.25);
+}
+
+.glow-cyan-md {
+  box-shadow: 0 0 25px rgba(0, 163, 255, 0.4);
+}
+
+.glow-blue-sm {
+  box-shadow: 0 0 15px rgba(37, 99, 255, 0.3);
+}
+
+.glow-blue-md {
+  box-shadow: 0 0 30px rgba(37, 99, 255, 0.45);
+}
+
+.glow-text-cyan {
+  text-shadow: 0 0 12px rgba(0, 163, 255, 0.6);
+}
+
+.glow-text-blue {
+  text-shadow: 0 0 15px rgba(37, 99, 255, 0.7);
+}
+
+/* Esports Cyber Grid & Radial Background */
+.bg-cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(37, 99, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(37, 99, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-radial-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(37, 99, 255, 0.18) 0%, rgba(0, 163, 255, 0.05) 45%, transparent 75%);
+}
+
+.bg-radial-glow-cyan {
+  background: radial-gradient(circle at 50% 50%, rgba(0, 163, 255, 0.15) 0%, transparent 60%);
+}
+
+/* Glassmorphism card */
+.glass-panel {
+  background: rgba(17, 26, 46, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 44, 74, 0.8);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  border-color: rgba(0, 163, 255, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(0, 163, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Angled cyber badge clip */
+.cyber-cut {
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+}
+
+/* Animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 4s infinite ease-in-out;
 }
