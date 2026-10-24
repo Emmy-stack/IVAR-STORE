@@ -1,7 +1,6 @@
-import { cookies } from 'next/headers';
-import { ADMIN_EMAIL } from '@/lib/constants';
-import { isSupabaseConfigured } from '@/lib/supabase/config';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { ADMIN_EMAIL, isClerkConfigured } from '@/lib/clerk-config';
 
 export interface AdminUser {
   email: string;
@@ -9,51 +8,144 @@ export interface AdminUser {
   isAdmin: boolean;
 }
 
-export async function getAdminSession(): Promise<AdminUser | null> {
-  // 1. If Supabase is configured, check authenticated user via Supabase Auth
-  if (isSupabaseConfigured()) {
-    try {
-      const supabase = await createServerClient();
-      const { data: { user }, error } = await supabase.auth.getUser();
+export type AuthCheckResult =
+  | { status: 'authorized'; user: AdminUser }
+  | { status: 'unauthenticated'; reason: string }
+  | { status: 'unauthorized'; email?: string; reason: string }
+  | { status: 'unconfigured'; reason: string };
 
-      if (!error && user && user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        return {
-          email: user.email,
+/**
+ * Server-side trusted authentication and authorization check.
+ * Strictly verifies that the authenticated Clerk user possesses
+ * the exact authorized admin email (socialmeda03@gmail.com) AND
+ * that the email address is verified by Clerk.
+ */
+export async function checkAdminAuth(): Promise<AuthCheckResult> {
+  if (!isClerkConfigured()) {
+    return {
+      status: 'unconfigured',
+      reason: 'Clerk environment variables are not configured or still have placeholder values.',
+    };
+  }
+
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return {
+        status: 'unauthenticated',
+        reason: 'No authenticated user session found.',
+      };
+    }
+
+    const user = await currentUser();
+
+    if (!user) {
+      return {
+        status: 'unauthenticated',
+        reason: 'Authenticated user details could not be retrieved from Clerk server.',
+      };
+    }
+
+    const targetEmail = ADMIN_EMAIL.toLowerCase();
+
+    // Check all verified emails associated with this Clerk account
+    const matchedVerifiedEmail = user.emailAddresses.find((emailObj) => {
+      const emailMatches = emailObj.emailAddress.toLowerCase() === targetEmail;
+      const isVerified = emailObj.verification?.status === 'verified';
+      return emailMatches && isVerified;
+    });
+
+    if (matchedVerifiedEmail) {
+      return {
+        status: 'authorized',
+        user: {
+          email: matchedVerifiedEmail.emailAddress,
           id: user.id,
           isAdmin: true,
-        };
-      }
-    } catch (err) {
-      console.error('Supabase auth session check failed:', err);
+        },
+      };
     }
+
+    // User is logged in, but not with the verified authorized admin email
+    const primaryEmail =
+      user.emailAddresses.find((e) => e.id === user.primaryEmailAddressId)?.emailAddress ||
+      user.emailAddresses[0]?.emailAddress;
+
+    return {
+      status: 'unauthorized',
+      email: primaryEmail,
+      reason: `Account '${primaryEmail || 'unknown'}' is not authorized. Access is strictly restricted to verified ${ADMIN_EMAIL}.`,
+    };
+  } catch (error) {
+    console.error('Clerk server-side auth verification error:', error);
+    return {
+      status: 'unauthenticated',
+      reason: 'Failed to verify Clerk credentials with authentication server.',
+    };
   }
+}
 
-  // 2. Local fallback secure cookie check
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('ivar_admin_session')?.value;
-
-  if (sessionToken) {
-    try {
-      const decoded = JSON.parse(Buffer.from(sessionToken, 'base64').toString('utf-8'));
-      if (decoded.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && decoded.expiresAt > Date.now()) {
-        return {
-          email: decoded.email,
-          id: decoded.id || 'admin-local',
-          isAdmin: true,
-        };
-      }
-    } catch {
-      // Invalid token
-    }
+/**
+ * Retrieves the current authorized admin session or null.
+ */
+export async function getAdminSession(): Promise<AdminUser | null> {
+  const result = await checkAdminAuth();
+  if (result.status === 'authorized') {
+    return result.user;
   }
-
   return null;
 }
 
+/**
+ * Enforces admin authorization inside Server Components, Route Handlers, and Server Actions.
+ * Throws an error with a status code:
+ * - 401 if unauthenticated or Clerk unconfigured
+ * - 403 if authenticated but not the authorized admin email
+ */
 export async function requireAdmin(): Promise<AdminUser> {
-  const session = await getAdminSession();
-  if (!session || !session.isAdmin) {
-    throw new Error('Unauthorized: Restricted to administrator (socialmeda03@gmail.com)');
+  const result = await checkAdminAuth();
+
+  if (result.status === 'unconfigured') {
+    const error: any = new Error(
+      'Clerk configuration missing: Please set active NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in .env.local'
+    );
+    error.status = 401;
+    throw error;
   }
-  return session;
+
+  if (result.status === 'unauthenticated') {
+    const error: any = new Error('Authentication required: Please sign in at /admin/login');
+    error.status = 401;
+    throw error;
+  }
+
+  if (result.status === 'unauthorized') {
+    const error: any = new Error(
+      `Forbidden: Access denied for ${result.email || 'signed-in account'}. Access is strictly restricted to ${ADMIN_EMAIL}`
+    );
+    error.status = 403;
+    throw error;
+  }
+
+  return result.user;
+}
+
+/**
+ * Asserts admin authorization for Page Server Components.
+ * Redirects unauthenticated users to /admin/login.
+ * Redirects unauthorized (wrong email or unverified) users to /admin/unauthorized.
+ */
+export async function assertAdminOrRedirect(): Promise<AdminUser> {
+  const result = await checkAdminAuth();
+
+  if (result.status === 'unauthorized') {
+    redirect('/admin/unauthorized');
+  }
+
+  if (result.status !== 'authorized') {
+    redirect('/admin/login');
+  }
+
+  return result.user;
 }

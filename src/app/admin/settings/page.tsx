@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation';
-import { getAdminSession } from '@/lib/auth';
+import { assertAdminOrRedirect } from '@/lib/auth';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
+import { isClerkConfigured } from '@/lib/clerk-config';
 import { ADMIN_EMAIL } from '@/lib/constants';
 import {
   Settings,
@@ -16,12 +16,10 @@ import {
 export const revalidate = 0;
 
 export default async function AdminSettingsPage() {
-  const session = await getAdminSession();
-  if (!session) {
-    redirect('/admin/login');
-  }
+  await assertAdminOrRedirect();
 
   const isSupabase = isSupabaseConfigured();
+  const isClerk = isClerkConfigured();
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -44,7 +42,7 @@ export default async function AdminSettingsPage() {
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Administrator Authorization</h3>
-            <p className="text-xs text-[#94A3B8]">Strictly enforced through server policies and Supabase RLS.</p>
+            <p className="text-xs text-[#94A3B8]">Enforced via Clerk Authentication & server-side verified email check.</p>
           </div>
         </div>
 
@@ -58,10 +56,10 @@ export default async function AdminSettingsPage() {
           </div>
 
           <div className="p-4 rounded-xl bg-[#080D1A] border border-[#1E2C4A]">
-            <span className="block text-xs text-slate-400 mb-1">Row Level Security (RLS)</span>
-            <span className="font-mono text-sm font-bold text-white">Enabled on all tables</span>
+            <span className="block text-xs text-slate-400 mb-1">Authentication Provider</span>
+            <span className="font-mono text-sm font-bold text-white">Clerk Official SDK</span>
             <span className="block text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
-              <CheckCircle2 className="w-3 h-3" /> Drafts & private operations protected
+              <CheckCircle2 className="w-3 h-3" /> {isClerk ? 'Live Keys Configured' : 'Keys Needed in .env.local'}
             </span>
           </div>
         </div>
@@ -95,11 +93,10 @@ export default async function AdminSettingsPage() {
           </div>
 
           <span
-            className={`px-3 py-1 rounded-full text-xs font-bold ${
-              isSupabase
+            className={`px-3 py-1 rounded-full text-xs font-bold ${isSupabase
                 ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-500/50'
                 : 'bg-yellow-950/80 text-yellow-400 border border-yellow-500/50'
-            }`}
+              }`}
           >
             {isSupabase ? 'Production Mode' : 'Local Dev Mode'}
           </span>

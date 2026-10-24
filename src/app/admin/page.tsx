@@ -1,6 +1,5 @@
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminSession } from '@/lib/auth';
+import { assertAdminOrRedirect } from '@/lib/auth';
 import { getDashboardStats } from '@/lib/services/account-service';
 import { isSupabaseConfigured } from '@/lib/supabase/config';
 import { formatNaira } from '@/lib/whatsapp';
@@ -21,10 +20,7 @@ import {
 export const revalidate = 0;
 
 export default async function AdminOverviewPage() {
-  const session = await getAdminSession();
-  if (!session) {
-    redirect('/admin/login');
-  }
+  await assertAdminOrRedirect();
 
   const [stats, isSupabaseActive] = await Promise.all([
     getDashboardStats(),

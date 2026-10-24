@@ -145,10 +145,10 @@ export default function Footer({
           <div className="flex items-center gap-6">
             <Link
               href="/admin/login"
-              className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
+              className="flex items-center gap-1.5 text-slate-400 hover:text-[#00A3FF] transition-colors font-medium"
             >
-              <Lock className="w-3 h-3" />
-              <span>Admin Portal</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Admin Login</span>
             </Link>
           </div>
         </div>

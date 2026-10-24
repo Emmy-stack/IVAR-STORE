@@ -17,6 +17,7 @@ import {
   X,
   ShieldAlert,
 } from 'lucide-react';
+import { useClerk } from '@clerk/nextjs';
 import { ADMIN_EMAIL } from '@/lib/constants';
 
 interface AdminSidebarProps {
@@ -26,6 +27,7 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ adminEmail = ADMIN_EMAIL }: AdminSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { signOut } = useClerk();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -41,11 +43,12 @@ export default function AdminSidebar({ adminEmail = ADMIN_EMAIL }: AdminSidebarP
   const handleSignOut = async () => {
     setIsSigningOut(true);
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await signOut({ redirectUrl: '/admin/login' });
+    } catch (err) {
+      console.error('Clerk signOut error:', err);
       router.push('/admin/login');
-      router.refresh();
-    } catch {
-      router.push('/admin/login');
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -103,11 +106,10 @@ export default function AdminSidebar({ adminEmail = ADMIN_EMAIL }: AdminSidebarP
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                  isActive
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${isActive
                     ? 'bg-gradient-to-r from-[#2563FF] to-[#00A3FF] text-white shadow-lg shadow-[#00A3FF]/20'
                     : 'text-slate-400 hover:text-white hover:bg-[#111A2E]'
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 <span>{item.label}</span>

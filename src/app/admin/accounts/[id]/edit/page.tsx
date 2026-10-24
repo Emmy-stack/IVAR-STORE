@@ -1,6 +1,6 @@
-import { redirect, notFound } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { getAdminSession } from '@/lib/auth';
+import { assertAdminOrRedirect } from '@/lib/auth';
 import { getAccountById } from '@/lib/services/account-service';
 import AccountForm from '@/components/admin/AccountForm';
 import { ArrowLeft } from 'lucide-react';
@@ -12,10 +12,7 @@ interface Props {
 export const revalidate = 0;
 
 export default async function EditAccountPage({ params }: Props) {
-  const session = await getAdminSession();
-  if (!session) {
-    redirect('/admin/login');
-  }
+  await assertAdminOrRedirect();
 
   const { id } = await params;
   const account = await getAccountById(id);
