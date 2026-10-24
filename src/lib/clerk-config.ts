@@ -11,6 +11,15 @@ export { ADMIN_EMAIL };
 export const DUMMY_FALLBACK_PUBLISHABLE_KEY =
   'pk_test_aXZhci1zdG9yZS5jbGVyay5hY2NvdW50cy5kZXYk';
 
+function isPublishableKeyConfigured(publishableKey: string): boolean {
+  return Boolean(
+    publishableKey &&
+      !publishableKey.includes('your_publishable_key') &&
+      publishableKey !== 'pk_test_placeholder' &&
+      publishableKey !== DUMMY_FALLBACK_PUBLISHABLE_KEY
+  );
+}
+
 /**
  * Checks whether Clerk authentication is properly configured with live keys.
  * Detects placeholder keys such as 'pk_test_your_publishable_key'.
@@ -19,17 +28,16 @@ export function isClerkConfigured(): boolean {
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
   const secretKey = process.env.CLERK_SECRET_KEY || '';
 
-  if (!publishableKey || !secretKey) {
+  if (!isPublishableKeyConfigured(publishableKey) || !secretKey) {
     return false;
   }
 
   // Check for common template placeholders
   if (
-    publishableKey.includes('your_publishable_key') ||
     secretKey.includes('your_secret_key') ||
-    publishableKey === 'pk_test_placeholder' ||
+    secretKey.includes('...') ||
     secretKey === 'sk_test_placeholder' ||
-    publishableKey === DUMMY_FALLBACK_PUBLISHABLE_KEY
+    secretKey.length < 20
   ) {
     return false;
   }
@@ -42,8 +50,9 @@ export function isClerkConfigured(): boolean {
  * or the syntactically valid placeholder key to avoid ClerkProvider crashing.
  */
 export function getSafeClerkPublishableKey(): string {
-  if (isClerkConfigured() && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '';
+  if (isPublishableKeyConfigured(publishableKey)) {
+    return publishableKey;
   }
   return DUMMY_FALLBACK_PUBLISHABLE_KEY;
 }

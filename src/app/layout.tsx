@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
-import { getSafeClerkPublishableKey } from '@/lib/clerk-config';
+import { getSafeClerkPublishableKey, isClerkConfigured } from '@/lib/clerk-config';
+import AdminSignInRedirect from '@/components/auth/AdminSignInRedirect';
 import './globals.css';
 
 const inter = Inter({
@@ -47,6 +48,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const publishableKey = getSafeClerkPublishableKey();
+  const authConfigured = isClerkConfigured();
 
   return (
     <ClerkProvider
@@ -71,6 +73,7 @@ export default function RootLayout({
     >
       <html lang="en" className={`dark ${inter.variable}`}>
         <body className="min-h-screen bg-[#080D1A] text-[#F8FAFC] antialiased selection:bg-[#00A3FF] selection:text-black">
+          <AdminSignInRedirect authConfigured={authConfigured} />
           {children}
         </body>
       </html>

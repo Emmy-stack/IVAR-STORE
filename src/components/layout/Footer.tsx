@@ -1,6 +1,7 @@
 import Link from 'next/link';
-import { Flame, MessageCircle, Send, ShieldCheck, Zap, Lock } from 'lucide-react';
+import { Flame, MessageCircle, Send, ShieldCheck, Zap } from 'lucide-react';
 import { getSellAccountWhatsAppUrl } from '@/lib/whatsapp';
+import AdminAuthLink from './AdminAuthLink';
 
 interface FooterProps {
   whatsappNumber?: string;
@@ -143,13 +144,7 @@ export default function Footer({
         <div className="border-t border-[#1E2C4A]/60 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <p>© {currentYear} IVAR STORE. All rights reserved. Free Fire is a registered trademark of Garena.</p>
           <div className="flex items-center gap-6">
-            <Link
-              href="/admin/login"
-              className="flex items-center gap-1.5 text-slate-400 hover:text-[#00A3FF] transition-colors font-medium"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              <span>Admin Login</span>
-            </Link>
+            <AdminAuthLink />
           </div>
         </div>
       </div>

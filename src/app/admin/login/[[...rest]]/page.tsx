@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SignIn } from '@clerk/nextjs';
 import { Flame, Lock, Shield, AlertTriangle, Key, ExternalLink } from 'lucide-react';
 import { checkAdminAuth } from '@/lib/auth';
-import { isClerkConfigured, ADMIN_EMAIL } from '@/lib/clerk-config';
+import { isClerkConfigured } from '@/lib/clerk-config';
 
 export const metadata = {
   title: 'Admin Sign In — IVAR STORE',
@@ -52,7 +52,7 @@ export default async function AdminLoginPage() {
 
         <h1 className="text-2xl font-black text-white tracking-tight">Admin Sign In</h1>
         <p className="text-xs text-[#94A3B8] mt-1">
-          Access is strictly restricted to verified <strong className="text-white">{ADMIN_EMAIL}</strong>
+          Access is strictly restricted to verified <strong className="text-white">ADMIN</strong>
         </p>
       </div>
 
@@ -68,7 +68,7 @@ export default async function AdminLoginPage() {
             <div className="text-center">
               <h2 className="text-lg font-bold text-white">Clerk Configuration Required</h2>
               <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Placeholder keys (<code className="text-amber-400 font-mono">pk_test_your_publishable_key</code>) are currently present in your <code className="text-white font-mono">.env.local</code> file.
+                The browser session is active, but the server cannot verify it. The Clerk secret key appears incomplete or does not match the publishable key.
               </p>
             </div>
 
@@ -79,8 +79,8 @@ export default async function AdminLoginPage() {
               </div>
               <ol className="list-decimal list-inside space-y-1.5 text-slate-300 text-[11px]">
                 <li>Sign in to your <strong className="text-white">Clerk Dashboard</strong>.</li>
-                <li>Copy your <strong className="text-[#00A3FF]">Publishable Key</strong> and <strong className="text-[#00A3FF]">Secret Key</strong> from API Keys.</li>
-                <li>Replace the placeholder values in <strong className="text-white">.env.local</strong>:
+                <li>Copy the <strong className="text-[#00A3FF]">Publishable Key</strong> and <strong className="text-[#00A3FF]">Secret Key</strong> from that instance&apos;s API Keys.</li>
+                <li>Replace both Clerk values in <strong className="text-white">.env.local</strong>:
                   <div className="mt-1.5 p-2 rounded bg-black/60 font-mono text-[10px] text-slate-300 overflow-x-auto">
                     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...<br />
                     CLERK_SECRET_KEY=sk_test_...
@@ -110,7 +110,7 @@ export default async function AdminLoginPage() {
               forceRedirectUrl="/admin"
               signUpUrl={undefined}
               initialValues={{
-                emailAddress: ADMIN_EMAIL,
+                emailAddress: "Enter Email"
               }}
               appearance={{
                 variables: {
