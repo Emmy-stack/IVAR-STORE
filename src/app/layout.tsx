@@ -11,8 +11,38 @@ const inter = Inter({
   variable: '--font-sans',
 });
 
+function getMetadataBase(): URL {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (siteUrl) {
+    try {
+      const url = new URL(siteUrl);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return url;
+      }
+    } catch {
+      // Use the deployment URL or local development URL below.
+    }
+
+    console.warn(
+      'NEXT_PUBLIC_SITE_URL must be an absolute HTTP(S) URL; using the deployment URL fallback.'
+    );
+  }
+
+  const deploymentUrl = process.env.VERCEL_URL?.trim();
+  if (deploymentUrl) {
+    try {
+      return new URL(`https://${deploymentUrl}`);
+    } catch {
+      console.warn('VERCEL_URL is invalid; using http://localhost:3000 for metadata.');
+    }
+  }
+
+  return new URL('http://localhost:3000');
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  metadataBase: getMetadataBase(),
   title: 'IVAR STORE — Nigeria’s #1 Free Fire Account Marketplace',
   description:
     'Buy and sell authentic Free Fire accounts with rare bundles, max evo guns, and Grandmaster ranks. Verified WhatsApp escrow handover and fast delivery.',
