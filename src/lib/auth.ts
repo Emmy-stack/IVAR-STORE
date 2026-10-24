@@ -97,6 +97,15 @@ export async function getAdminSession(): Promise<AdminUser | null> {
   return null;
 }
 
+export class AuthError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'AuthError';
+    this.status = status;
+  }
+}
+
 /**
  * Enforces admin authorization inside Server Components, Route Handlers, and Server Actions.
  * Throws an error with a status code:
@@ -107,25 +116,21 @@ export async function requireAdmin(): Promise<AdminUser> {
   const result = await checkAdminAuth();
 
   if (result.status === 'unconfigured') {
-    const error: any = new Error(
-      'Clerk configuration missing: Please set active NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in .env.local'
+    throw new AuthError(
+      'Clerk configuration missing: Please set active NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY in .env.local',
+      401
     );
-    error.status = 401;
-    throw error;
   }
 
   if (result.status === 'unauthenticated') {
-    const error: any = new Error('Authentication required: Please sign in at /admin/login');
-    error.status = 401;
-    throw error;
+    throw new AuthError('Authentication required: Please sign in at /admin/login', 401);
   }
 
   if (result.status === 'unauthorized') {
-    const error: any = new Error(
-      `Forbidden: Access denied for ${result.email || 'signed-in account'}. Access is strictly restricted to ${ADMIN_EMAIL}`
+    throw new AuthError(
+      `Forbidden: Access denied for ${result.email || 'signed-in account'}. Access is strictly restricted to ${ADMIN_EMAIL}`,
+      403
     );
-    error.status = 403;
-    throw error;
   }
 
   return result.user;

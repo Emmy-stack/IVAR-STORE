@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { getAccountBySlug, getPublishedAccounts } from '@/lib/services/account-service';
+import { getAccountBySlug } from '@/lib/services/account-service';
 import { getStoreSettings } from '@/lib/services/settings-service';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -11,6 +11,9 @@ import { formatNaira } from '@/lib/whatsapp';
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

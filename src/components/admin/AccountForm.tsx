@@ -1,20 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Account, AccountImage, AccountStatus } from '@/types';
+import { createClient } from '@supabase/supabase-js';
+import { Account, AccountStatus } from '@/types';
 import { FF_RANKS } from '@/lib/constants';
 import {
   Upload,
   Star,
   Trash2,
-  Plus,
   X,
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
-  Sparkles,
   Save,
 } from 'lucide-react';
 
@@ -51,15 +50,16 @@ export default function AccountForm({
   const [tags, setTags] = useState<string[]>(initialAccount?.tags || []);
 
   // Image Gallery State
-  const [images, setImages] = useState<{ storage_path: string; is_primary: boolean }[]>(
-    initialAccount?.images?.map(img => ({
+  const [images, setImages] = useState<{ storage_path: string; is_primary: boolean }[]>(() => {
+    const initial = initialAccount?.images?.map(img => ({
       storage_path: img.storage_path,
-      is_primary: img.is_primary,
-    })) || [
-      { storage_path: '/images/sample-acc-1.jpg', is_primary: true },
-      { storage_path: '/images/sample-acc-3.jpg', is_primary: false },
-    ]
-  );
+      is_primary: Boolean(img.is_primary),
+    })) || [];
+    if (initial.length > 0 && !initial.some(img => img.is_primary)) {
+      initial[0].is_primary = true;
+    }
+    return initial;
+  });
 
   // Helpers for adding array items
   const [skinInput, setSkinInput] = useState('');
@@ -70,9 +70,11 @@ export default function AccountForm({
 
   // UI status
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ completed: number; total: number } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const newlyUploadedPaths = useRef<string[]>([]);
 
   // Add Item to Array
   const addItem = (
@@ -97,39 +99,93 @@ export default function AccountForm({
 
   // Upload Screenshot Handler
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
 
     setIsUploading(true);
+    setUploadProgress({ completed: 0, total: files.length });
     setErrorMessage('');
 
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('bucket', 'account-images');
-
-        const res = await fetch('/api/admin/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Upload failed');
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+          throw new Error(`${file.name}: use a JPEG, PNG, or WebP image.`);
+        }
+        if (file.size === 0 || file.size > 15 * 1024 * 1024) {
+          throw new Error(`${file.name}: image must be between 1 byte and 15MB.`);
         }
 
-        const isFirst = images.length === 0;
-        setImages(prev => [
-          ...prev,
-          { storage_path: data.url, is_primary: isFirst },
-        ]);
+        let imageUrl = '';
+
+        // Attempt signed upload if supported by server
+        try {
+          const metadataResponse = await fetch('/api/admin/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              bucket: 'account-images',
+              contentType: file.type,
+              size: file.size,
+            }),
+          });
+          const metadata = await metadataResponse.json();
+
+          if (metadataResponse.ok && metadata.strategy === 'signed' && metadata.path && metadata.token) {
+            const supabaseUrl = metadata.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const anonKey = metadata.anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            if (supabaseUrl && anonKey) {
+              const supabase = createClient(supabaseUrl, anonKey);
+              const { error } = await supabase.storage
+                .from('account-images')
+                .uploadToSignedUrl(metadata.path, metadata.token, file, { contentType: file.type });
+              if (!error && metadata.url) {
+                imageUrl = metadata.url;
+              }
+            }
+          }
+        } catch {
+          // If signed upload setup fails, seamlessly fall back to server FormData upload below
+        }
+
+        // Direct server upload fallback (uses service role or local storage)
+        if (!imageUrl) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('bucket', 'account-images');
+          const uploadResponse = await fetch('/api/admin/upload', {
+            method: 'POST',
+            body: formData,
+          });
+          const uploadResult = await uploadResponse.json();
+          if (!uploadResponse.ok) {
+            throw new Error(uploadResult.error || `Failed to upload ${file.name}.`);
+          }
+          imageUrl = uploadResult.url;
+        }
+
+        if (!imageUrl) {
+          throw new Error(`Failed to upload ${file.name}.`);
+        }
+
+        setImages(prev => {
+          const next = [
+            ...prev,
+            { storage_path: imageUrl, is_primary: prev.length === 0 },
+          ];
+          if (!next.some(img => img.is_primary)) {
+            next[0].is_primary = true;
+          }
+          return next;
+        });
+        newlyUploadedPaths.current.push(imageUrl);
+        setUploadProgress({ completed: i + 1, total: files.length });
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Error uploading file(s)');
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Error uploading file(s)');
     } finally {
       setIsUploading(false);
+      setUploadProgress(null);
       e.target.value = '';
     }
   };
@@ -153,6 +209,43 @@ export default function AccountForm({
     });
   };
 
+  const moveImage = (index: number, direction: -1 | 1) => {
+    setImages(prev => {
+      const nextIndex = index + direction;
+      if (nextIndex < 0 || nextIndex >= prev.length) return prev;
+      const next = [...prev];
+      [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
+      return next;
+    });
+  };
+
+  const cleanUpUploadedFiles = async (storagePaths: string[]) => {
+    if (storagePaths.length === 0) return;
+    const response = await fetch('/api/admin/upload', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ storagePaths }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || 'Could not clean up unused image uploads.');
+    }
+  };
+
+  const handleCancel = async () => {
+    setErrorMessage('');
+    setIsSubmitting(true);
+    try {
+      await cleanUpUploadedFiles(newlyUploadedPaths.current);
+      newlyUploadedPaths.current = [];
+      router.push('/admin/accounts');
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not cancel and clean up uploads.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   // Submit Form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,8 +260,8 @@ export default function AccountForm({
       setErrorMessage('Please enter a valid positive price in Naira');
       return;
     }
-    if (images.length === 0) {
-      setErrorMessage('Please provide at least one account screenshot');
+    if (images.length === 0 || images.filter(image => image.is_primary).length !== 1) {
+      setErrorMessage('Add at least one screenshot and choose exactly one primary image.');
       return;
     }
 
@@ -197,8 +290,9 @@ export default function AccountForm({
     };
 
     try {
+      const targetId = initialAccount?.id;
       const url = isEditing
-        ? `/api/admin/accounts/${initialAccount?.id}`
+        ? `/api/admin/accounts/${encodeURIComponent(targetId || '')}`
         : '/api/admin/accounts';
       const method = isEditing ? 'PUT' : 'POST';
 
@@ -213,13 +307,25 @@ export default function AccountForm({
         throw new Error(data.error || 'Failed to save account');
       }
 
-      setSuccessMessage('Account saved successfully! Redirecting...');
+      const savedPaths = new Set(images.map(image => image.storage_path));
+      const unusedUploads = newlyUploadedPaths.current.filter(path => !savedPaths.has(path));
+      let cleanupWarning = '';
+      try {
+        await cleanUpUploadedFiles(unusedUploads);
+        newlyUploadedPaths.current = [];
+      } catch (error: unknown) {
+        cleanupWarning = error instanceof Error
+          ? ` Unused uploads need cleanup: ${error.message}`
+          : ' Unused uploads could not be cleaned up.';
+      }
+      newlyUploadedPaths.current = [];
+      setSuccessMessage(`Account saved successfully!${cleanupWarning} Redirecting...`);
       setTimeout(() => {
-        router.push('/admin/accounts');
         router.refresh();
+        router.push('/admin/accounts');
       }, 1000);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Error saving account');
+    } catch (error: unknown) {
+      setErrorMessage(error instanceof Error ? error.message : 'Error saving account');
     } finally {
       setIsSubmitting(false);
     }
@@ -343,6 +449,35 @@ export default function AccountForm({
         </div>
 
         <div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Number of Skins
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={skinCount}
+                onChange={e => setSkinCount(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#080D1A] border border-[#1E2C4A] text-sm text-white focus:outline-none focus:border-[#00A3FF]"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                Number of Bundles
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={bundleCount}
+                onChange={e => setBundleCount(e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#080D1A] border border-[#1E2C4A] text-sm text-white focus:outline-none focus:border-[#00A3FF]"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
           <label className="block text-xs font-semibold text-slate-300 mb-1.5">
             Full Description & Locker Highlights
           </label>
@@ -393,13 +528,17 @@ export default function AccountForm({
           <div>
             <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#00A3FF]/20 border border-[#00A3FF]/40 hover:bg-[#00A3FF]/30 transition-colors">
               <Upload className="w-3.5 h-3.5" />
-              <span>{isUploading ? 'Uploading...' : 'Upload Screenshot'}</span>
+              <span>
+                {isUploading && uploadProgress
+                  ? `Uploading ${uploadProgress.completed + 1}/${uploadProgress.total}...`
+                  : 'Upload Screenshot'}
+              </span>
               <input
                 type="file"
                 multiple
                 accept="image/png,image/jpeg,image/webp"
                 onChange={handleFileUpload}
-                disabled={isUploading}
+                disabled={isUploading || isSubmitting}
                 className="hidden"
               />
             </label>
@@ -410,7 +549,7 @@ export default function AccountForm({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {images.map((img, idx) => (
             <div
-              key={idx}
+              key={`${img.storage_path}-${idx}`}
               className={`relative rounded-xl overflow-hidden aspect-video border-2 bg-black group transition-all ${
                 img.is_primary ? 'border-[#00A3FF] shadow-lg shadow-[#00A3FF]/20' : 'border-[#1E2C4A]'
               }`}
@@ -424,7 +563,27 @@ export default function AccountForm({
               />
 
               {/* Overlay controls */}
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => moveImage(idx, -1)}
+                  disabled={idx === 0}
+                  className="p-1.5 rounded-lg bg-black/70 text-white hover:bg-black disabled:opacity-40"
+                  title="Move image earlier"
+                  aria-label={`Move screenshot ${idx + 1} earlier`}
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveImage(idx, 1)}
+                  disabled={idx === images.length - 1}
+                  className="p-1.5 rounded-lg bg-black/70 text-white hover:bg-black disabled:opacity-40"
+                  title="Move image later"
+                  aria-label={`Move screenshot ${idx + 1} later`}
+                >
+                  <ArrowLeft className="w-4 h-4 rotate-180" />
+                </button>
                 <button
                   type="button"
                   onClick={() => setPrimaryImage(idx)}
@@ -535,6 +694,40 @@ export default function AccountForm({
           </div>
         </div>
 
+        {/* Weapons */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-300 mb-2">
+            Weapons
+          </label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              placeholder="e.g. AK47 Blue Flame Draco"
+              value={weaponInput}
+              onChange={e => setWeaponInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addItem(weapons, setWeapons, weaponInput, setWeaponInput))}
+              className="flex-1 px-3 py-2 rounded-xl bg-[#080D1A] border border-[#1E2C4A] text-xs text-white"
+            />
+            <button
+              type="button"
+              onClick={() => addItem(weapons, setWeapons, weaponInput, setWeaponInput)}
+              className="px-3 py-2 rounded-xl bg-[#1E2C4A] hover:bg-[#2563FF] text-white text-xs font-bold"
+            >
+              Add
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {weapons.map((item, idx) => (
+              <span key={idx} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#080D1A] border border-[#1E2C4A] text-xs text-slate-200">
+                <span>{item}</span>
+                <button type="button" onClick={() => removeItem(weapons, setWeapons, idx)} className="text-slate-500 hover:text-rose-400" aria-label={`Remove ${item}`}>
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* Emotes */}
         <div>
           <label className="block text-xs font-semibold text-slate-300 mb-2">
@@ -608,7 +801,8 @@ export default function AccountForm({
       <div className="flex items-center justify-end gap-4 pt-4 border-t border-[#1E2C4A]">
         <button
           type="button"
-          onClick={() => router.push('/admin/accounts')}
+          onClick={handleCancel}
+          disabled={isSubmitting || isUploading}
           className="px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-[#111A2E]"
         >
           Cancel
@@ -616,7 +810,7 @@ export default function AccountForm({
 
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-[#2563FF] to-[#00A3FF] hover:from-[#1D4ED8] hover:to-[#0284C7] shadow-lg shadow-[#00A3FF]/25 disabled:opacity-50"
         >
           <Save className="w-4 h-4" />

@@ -22,7 +22,7 @@ A marketplace for authentic Free Fire (FF) gaming accounts, featuring esports ae
   - Direct WhatsApp link prefilled with: `"Hey, I want to sell my account..."`.
 - **Protected Admin Dashboard**:
   - Exclusively authorized for: `socialmeda03@gmail.com`.
-  - Supabase Auth integration with strict server-side authorization enforcement.
+  - Clerk authentication with strict server-side authorization enforcement for the verified admin email.
   - **Overview**: Real-time stats (Total Listings, Available, Reserved, Sold) and recent additions/updates.
   - **Manage Accounts**: Interactive table with inline status changers, featured toggles, edit, preview, and delete confirmation dialogs.
   - **Add & Edit Accounts**: Auto-generates Product IDs (`IVAR-FF-XXXX`), multi-image uploader with primary image selector, rank, evo guns, bundles, emotes, tags, and draft/published toggle.
@@ -37,7 +37,7 @@ A marketplace for authentic Free Fire (FF) gaming accounts, featuring esports ae
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS v4 with custom esports glow utilities
 - **Database**: Supabase PostgreSQL with Row Level Security (RLS)
-- **Authentication**: Supabase Auth (strictly restricted to `socialmeda03@gmail.com`)
+- **Authentication**: Clerk (strictly restricted to verified `socialmeda03@gmail.com`)
 - **Storage**: Supabase Storage (`account-images` & `hero-media` buckets)
 - **Icons**: Lucide React
 - **Deployment**: Vercel-ready
@@ -61,18 +61,21 @@ Configure your Supabase credentials in `.env.local`:
 NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-secret-key
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
 ADMIN_EMAIL=socialmeda03@gmail.com
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-> **Note on Local Development**: If Supabase credentials are not yet configured, IVAR STORE automatically runs in local development mode using a file-backed JSON database (`src/lib/data/local-db.json`) and local uploads (`public/uploads/`). All create, update, status change, and delete operations persist across browser refreshes.
+> **Note on Local Development**: If Supabase credentials are not configured, local development uses a file-backed JSON database (`src/lib/data/local-db.json`) and local uploads (`public/uploads/`). On Vercel/production, configure Supabase and the server-only service role key; local files are not persistent there. Clerk verifies the admin identity before server-side service-role operations, and the service role key must never be exposed to browser code.
 
 ### 3. Database Migration & Schema (Supabase)
 To set up your Supabase database:
 1. Open your [Supabase Dashboard](https://supabase.com/dashboard).
 2. Go to the **SQL Editor**.
 3. Run the SQL script located in `supabase/migrations/001_initial_schema.sql`.
-4. (Optional) Run `supabase/seed.sql` to populate initial high-tier Free Fire account listings.
+4. Run `supabase/migrations/002_admin_storage_limits.sql` on existing projects to set persistent media upload size limits.
+5. (Optional) Run `supabase/seed.sql` to populate initial high-tier Free Fire account listings.
 
 The migration sets up:
 - `accounts` table with indexes for fast search and price filtering.

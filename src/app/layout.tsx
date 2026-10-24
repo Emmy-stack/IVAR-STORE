@@ -12,10 +12,11 @@ const inter = Inter({
 });
 
 function getMetadataBase(): URL {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const rawSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
-  if (siteUrl) {
+  if (rawSiteUrl) {
     try {
+      const siteUrl = rawSiteUrl.split(',')[0].trim();
       const url = new URL(siteUrl);
       if (url.protocol === 'http:' || url.protocol === 'https:') {
         return url;

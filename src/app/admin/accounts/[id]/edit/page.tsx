@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { assertAdminOrRedirect } from '@/lib/auth';
-import { getAccountById } from '@/lib/services/account-service';
+import { getAccountByIdAdmin } from '@/lib/services/account-service';
 import AccountForm from '@/components/admin/AccountForm';
 import { ArrowLeft } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export default async function EditAccountPage({ params }: Props) {
   await assertAdminOrRedirect();
 
   const { id } = await params;
-  const account = await getAccountById(id);
+  const account = await getAccountByIdAdmin(id);
 
   if (!account) {
     notFound();

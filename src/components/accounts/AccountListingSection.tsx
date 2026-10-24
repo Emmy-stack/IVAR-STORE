@@ -249,7 +249,7 @@ export default function AccountListingSection({ initialAccounts }: AccountListin
             <div className="w-full md:w-48">
               <select
                 value={sortBy}
-                onChange={e => setSortBy(e.target.value as any)}
+                onChange={e => setSortBy(e.target.value as 'newest' | 'price_asc' | 'price_desc' | 'featured')}
                 className="w-full px-3 py-2.5 rounded-xl bg-[#080D1A] border border-[#1E2C4A] text-sm text-slate-200 focus:outline-none focus:border-[#00A3FF]"
               >
                 <option value="featured">Featured First</option>

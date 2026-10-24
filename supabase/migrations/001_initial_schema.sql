@@ -225,13 +225,13 @@ CREATE POLICY "Admin can insert store settings"
 -- =============================================================================
 
 -- Ensure buckets exist
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('account-images', 'account-images', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('account-images', 'account-images', true, 15728640)
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = EXCLUDED.file_size_limit;
 
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('hero-media', 'hero-media', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('hero-media', 'hero-media', true, 104857600)
+ON CONFLICT (id) DO UPDATE SET public = true, file_size_limit = EXCLUDED.file_size_limit;
 
 -- Storage RLS: Public read access for images and videos
 DROP POLICY IF EXISTS "Public read access for account images" ON storage.objects;

@@ -5,16 +5,15 @@ import Footer from '@/components/layout/Footer';
 import AccountListingSection from '@/components/accounts/AccountListingSection';
 import SellAccountBanner from '@/components/home/SellAccountBanner';
 
-interface Props {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata = {
   title: 'All Free Fire Accounts | IVAR STORE',
   description: 'Search and filter authentic Free Fire accounts in Nigeria. Evo guns, rare Sakura bundles, Grandmaster ranks.',
 };
 
-export default async function AccountsPage({ searchParams }: Props) {
+export default async function AccountsPage() {
   const [settings, accounts] = await Promise.all([
     getStoreSettings(),
     getPublishedAccounts(),

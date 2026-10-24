@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { StoreSettings } from '@/types';
 import { normalizeWhatsAppNumber } from '@/lib/whatsapp';
 import {
-  PhoneCall,
   MessageCircle,
   Send,
   Save,
@@ -19,7 +18,6 @@ interface ContactSettingsManagerProps {
 }
 
 export default function ContactSettingsManager({ initialSettings }: ContactSettingsManagerProps) {
-  const [settings, setSettings] = useState<StoreSettings | null>(initialSettings || null);
   const [isLoading, setIsLoading] = useState(!initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -30,30 +28,31 @@ export default function ContactSettingsManager({ initialSettings }: ContactSetti
   const [telegramUrl, setTelegramUrl] = useState(initialSettings?.telegram_url || 'https://t.me/ivarstore');
   const [sellMessage, setSellMessage] = useState(initialSettings?.sell_account_message || 'Hey, I want to sell my account...');
 
-  const loadSettings = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/admin/settings');
-      if (res.ok) {
-        const data = await res.json();
-        const s = data.settings as StoreSettings;
-        setSettings(s);
-        setWhatsappNumber(s.whatsapp_number || '07041545267');
-        setTelegramNumber(s.telegram_number || '07047673903');
-        setTelegramUrl(s.telegram_url || 'https://t.me/ivarstore');
-        setSellMessage(s.sell_account_message || 'Hey, I want to sell my account...');
-      }
-    } catch (err) {
-      console.error('Failed to load contact settings:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
     if (!initialSettings) {
-      loadSettings();
+      fetch('/api/admin/settings')
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => {
+          if (!ignore && data?.settings) {
+            const s = data.settings as StoreSettings;
+            setWhatsappNumber(s.whatsapp_number || '07041545267');
+            setTelegramNumber(s.telegram_number || '07047673903');
+            setTelegramUrl(s.telegram_url || 'https://t.me/ivarstore');
+            setSellMessage(s.sell_account_message || 'Hey, I want to sell my account...');
+            setIsLoading(false);
+          }
+        })
+        .catch(err => {
+          if (!ignore) {
+            console.error('Failed to load settings:', err);
+            setIsLoading(false);
+          }
+        });
     }
+    return () => {
+      ignore = true;
+    };
   }, [initialSettings]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
@@ -81,8 +80,8 @@ export default function ContactSettingsManager({ initialSettings }: ContactSetti
       if (!res.ok) throw new Error(data.error || 'Failed to update contact settings');
 
       showToast('success', 'Contact settings updated successfully!');
-    } catch (err: any) {
-      showToast('error', err.message || 'Error updating settings');
+    } catch (err: unknown) {
+      showToast('error', err instanceof Error ? err.message : 'Error updating settings');
     } finally {
       setIsSaving(false);
     }

@@ -5,7 +5,9 @@ export function createAdminClient() {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !serviceRoleKey) {
-    throw new Error('Supabase admin configuration missing (SUPABASE_SERVICE_ROLE_KEY)');
+    throw new Error(
+      'Supabase admin configuration missing. Set SUPABASE_SERVICE_ROLE_KEY on the server.'
+    );
   }
 
   return createClient(url, serviceRoleKey, {

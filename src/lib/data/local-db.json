@@ -63,59 +63,6 @@
       ]
     },
     {
-      "id": "a2000000-0000-0000-0000-000000000002",
-      "product_id": "IVAR-FF-0002",
-      "slug": "og-season-1-sakura-bundle-master-rank",
-      "title": "OG Season 1 Sakura Bundle | Master Rank IV | Rare Collector Locker",
-      "description": "Super rare OG collection account featuring the coveted Season 1 Elite Pass Sakura Bundle and matching kimono accessories. Master Rank IV with 4,850+ rank points, Evo M1014, and 28,000+ diamonds badge history.",
-      "price": 120000,
-      "level": 72,
-      "rank": "Master",
-      "skin_count": 198,
-      "bundle_count": 84,
-      "rare_skins": [
-        "Evo M1014 Green Flame",
-        "AWM Wavebreaker",
-        "Katana Sakura Bloom"
-      ],
-      "rare_bundles": [
-        "Season 1 Sakura Bundle (Full OG)",
-        "Hip Hop Season 2 Hat",
-        "Red Criminal Mask"
-      ],
-      "emotes": [
-        "Tea Time",
-        "Selfie",
-        "Arm Wave",
-        "Push Up"
-      ],
-      "weapons": [
-        "M1014 Evo",
-        "Groza Operano",
-        "Desert Eagle Golden"
-      ],
-      "tags": [
-        "OG Sakura",
-        "Season 1",
-        "Master",
-        "Collector"
-      ],
-      "status": "available",
-      "published": true,
-      "featured": true,
-      "created_at": "2026-10-23T11:00:00Z",
-      "updated_at": "2026-10-23T11:00:00Z",
-      "images": [
-        {
-          "id": "b2000000-0000-0000-0000-000000000001",
-          "account_id": "a2000000-0000-0000-0000-000000000002",
-          "storage_path": "/images/sample-acc-2.jpg",
-          "sort_order": 0,
-          "is_primary": true
-        }
-      ]
-    },
-    {
       "id": "a3000000-0000-0000-0000-000000000003",
       "product_id": "IVAR-FF-0003",
       "slug": "level-78-heroic-predatory-cobra-mp40",

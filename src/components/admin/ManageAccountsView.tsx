@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Account, AccountStatus } from '@/types';
 import { formatNaira } from '@/lib/whatsapp';
 import {
@@ -15,7 +16,6 @@ import {
   AlertCircle,
   Sparkles,
   RefreshCw,
-  X,
   Filter,
 } from 'lucide-react';
 
@@ -24,12 +24,14 @@ interface ManageAccountsViewProps {
 }
 
 export default function ManageAccountsView({ initialAccounts = [] }: ManageAccountsViewProps) {
+  const router = useRouter();
   const [accounts, setAccounts] = useState<Account[]>(initialAccounts);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [deleteModalAccount, setDeleteModalAccount] = useState<Account | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [toastMessage, setToastMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Fetch accounts
@@ -37,12 +39,12 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
     setIsLoading(true);
     try {
       const res = await fetch('/api/admin/accounts');
-      if (res.ok) {
-        const data = await res.json();
-        setAccounts(data.accounts || []);
-      }
-    } catch (err) {
-      console.error('Failed to load accounts:', err);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to load accounts.');
+      setAccounts(data.accounts || []);
+    } catch (error) {
+      console.error('Failed to load accounts:', error);
+      showToast('error', error instanceof Error ? error.message : 'Failed to load accounts.');
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +58,7 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
   // Status Change Handler
   const handleStatusChange = async (account: Account, newStatus: AccountStatus) => {
     try {
-      const res = await fetch(`/api/admin/accounts/${account.id}`, {
+      const res = await fetch(`/api/admin/accounts/${encodeURIComponent(account.id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -69,11 +71,13 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
           prev.map(a => (a.id === account.id ? { ...a, status: newStatus } : a))
         );
         showToast('success', `Status updated to ${newStatus}`);
+        router.refresh();
       } else {
-        showToast('error', 'Failed to update status');
+        const data = await res.json().catch(() => ({}));
+        showToast('error', data.error || 'Failed to update status.');
       }
-    } catch {
-      showToast('error', 'Error updating status');
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Error updating status.');
     }
   };
 
@@ -81,7 +85,7 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
   const handleToggleFeatured = async (account: Account) => {
     const nextFeatured = !account.featured;
     try {
-      const res = await fetch(`/api/admin/accounts/${account.id}`, {
+      const res = await fetch(`/api/admin/accounts/${encodeURIComponent(account.id)}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -94,11 +98,13 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
           prev.map(a => (a.id === account.id ? { ...a, featured: nextFeatured } : a))
         );
         showToast('success', nextFeatured ? 'Marked as Featured' : 'Unmarked from Featured');
+        router.refresh();
       } else {
-        showToast('error', 'Failed to update featured flag');
+        const data = await res.json().catch(() => ({}));
+        showToast('error', data.error || 'Failed to update featured flag.');
       }
-    } catch {
-      showToast('error', 'Failed to update featured flag');
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'Failed to update featured flag.');
     }
   };
 
@@ -106,8 +112,9 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
   const confirmDelete = async () => {
     if (!deleteModalAccount) return;
     setIsDeleting(true);
+    setDeleteError('');
     try {
-      const res = await fetch(`/api/admin/accounts/${deleteModalAccount.id}`, {
+      const res = await fetch(`/api/admin/accounts/${encodeURIComponent(deleteModalAccount.id)}`, {
         method: 'DELETE',
       });
 
@@ -115,11 +122,19 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
         setAccounts(prev => prev.filter(a => a.id !== deleteModalAccount.id));
         showToast('success', `Account ${deleteModalAccount.product_id} deleted successfully`);
         setDeleteModalAccount(null);
+        router.refresh();
       } else {
-        showToast('error', 'Failed to delete account');
+        const data = await res.json().catch(() => ({}));
+        const message = data.error || `Failed to delete ${deleteModalAccount.product_id}.`;
+        setDeleteError(message);
+        showToast('error', message);
       }
-    } catch {
-      showToast('error', 'Error deleting account');
+    } catch (error) {
+      const message = error instanceof Error
+        ? error.message
+        : `Error deleting ${deleteModalAccount.product_id}.`;
+      setDeleteError(message);
+      showToast('error', message);
     } finally {
       setIsDeleting(false);
     }
@@ -344,7 +359,10 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
 
                         <button
                           type="button"
-                          onClick={() => setDeleteModalAccount(acc)}
+                          onClick={() => {
+                            setDeleteError('');
+                            setDeleteModalAccount(acc);
+                          }}
                           className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-950/40 cursor-pointer"
                           title="Delete Account"
                         >
@@ -372,6 +390,11 @@ export default function ManageAccountsView({ initialAccounts = [] }: ManageAccou
               </strong>{' '}
               ({deleteModalAccount.title})? This action cannot be undone.
             </p>
+            {deleteError && (
+              <p role="alert" className="mb-4 text-xs text-rose-300">
+                {deleteError}
+              </p>
+            )}
 
             <div className="flex items-center justify-end gap-3">
               <button

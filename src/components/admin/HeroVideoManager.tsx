@@ -11,7 +11,6 @@ import {
   AlertCircle,
   Eye,
   RefreshCw,
-  Sparkles,
 } from 'lucide-react';
 
 interface HeroVideoManagerProps {
@@ -19,7 +18,6 @@ interface HeroVideoManagerProps {
 }
 
 export default function HeroVideoManager({ initialSettings }: HeroVideoManagerProps) {
-  const [settings, setSettings] = useState<StoreSettings | null>(initialSettings || null);
   const [isLoading, setIsLoading] = useState(!initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
@@ -33,31 +31,34 @@ export default function HeroVideoManager({ initialSettings }: HeroVideoManagerPr
   const [heroPosterUrl, setHeroPosterUrl] = useState(initialSettings?.hero_poster_url || '/images/hero-poster.jpg');
   const [heroVideoEnabled, setHeroVideoEnabled] = useState(initialSettings?.hero_video_enabled !== false);
 
-  const loadSettings = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/admin/settings');
-      if (res.ok) {
-        const data = await res.json();
-        const s = data.settings as StoreSettings;
-        setSettings(s);
-        setHeroTitle(s.hero_title || 'Find Your Next Legendary FF Account.');
-        setHeroSubtitle(s.hero_subtitle || 'Discover rare bundles, exclusive skins, and legendary collections.');
-        setHeroVideoUrl(s.hero_video_url || '');
-        setHeroPosterUrl(s.hero_poster_url || '/images/hero-poster.jpg');
-        setHeroVideoEnabled(s.hero_video_enabled !== false);
-      }
-    } catch (err) {
-      console.error('Failed to load settings:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
+    let ignore = false;
     if (!initialSettings) {
-      loadSettings();
+      fetch('/api/admin/settings')
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error('Failed to fetch'))))
+        .then((data) => {
+          if (!ignore && data?.settings) {
+            const s = data.settings as StoreSettings;
+            setHeroTitle(s.hero_title || 'Find Your Next Legendary FF Account.');
+            setHeroSubtitle(s.hero_subtitle || 'Discover rare bundles, exclusive skins, and legendary collections.');
+            setHeroVideoUrl(s.hero_video_url || '');
+            setHeroPosterUrl(s.hero_poster_url || '/images/hero-poster.jpg');
+            setHeroVideoEnabled(s.hero_video_enabled !== false);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load settings:', err);
+        })
+        .finally(() => {
+          if (!ignore) {
+            setIsLoading(false);
+          }
+        });
     }
+
+    return () => {
+      ignore = true;
+    };
   }, [initialSettings]);
 
   const showToast = (type: 'success' | 'error', text: string) => {
@@ -86,8 +87,9 @@ export default function HeroVideoManager({ initialSettings }: HeroVideoManagerPr
 
       setHeroVideoUrl(data.url);
       showToast('success', 'Hero video uploaded successfully!');
-    } catch (err: any) {
-      showToast('error', err.message || 'Error uploading video');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error uploading video';
+      showToast('error', msg);
     } finally {
       setIsUploadingVideo(false);
       e.target.value = '';
@@ -115,8 +117,9 @@ export default function HeroVideoManager({ initialSettings }: HeroVideoManagerPr
 
       setHeroPosterUrl(data.url);
       showToast('success', 'Hero poster image uploaded successfully!');
-    } catch (err: any) {
-      showToast('error', err.message || 'Error uploading poster image');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error uploading poster image';
+      showToast('error', msg);
     } finally {
       setIsUploadingPoster(false);
       e.target.value = '';
@@ -145,8 +148,9 @@ export default function HeroVideoManager({ initialSettings }: HeroVideoManagerPr
       if (!res.ok) throw new Error(data.error || 'Failed to save settings');
 
       showToast('success', 'Hero configuration published successfully!');
-    } catch (err: any) {
-      showToast('error', err.message || 'Error saving settings');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error saving settings';
+      showToast('error', msg);
     } finally {
       setIsSaving(false);
     }

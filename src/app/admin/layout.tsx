@@ -1,6 +1,8 @@
-import { redirect } from 'next/navigation';
 import { getAdminSession } from '@/lib/auth';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export const metadata = {
   title: 'IVAR STORE Admin Dashboard',
