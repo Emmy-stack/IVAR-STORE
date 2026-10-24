@@ -38,17 +38,37 @@ export function generateSlug(title: string, productId: string): string {
 }
 
 export async function getNextProductId(): Promise<string> {
-  assertAdminPersistenceConfigured();
   let highestNum = 0;
 
   if (isSupabaseAdminConfigured()) {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase.from('accounts').select('product_id');
-    if (error) throw new Error(`Could not generate product ID: ${error.message}`);
-    data?.forEach(item => {
-      const match = item.product_id.match(/IVAR-FF-(\d+)/i);
-      if (match) highestNum = Math.max(highestNum, parseInt(match[1], 10));
-    });
+    try {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase.from('accounts').select('product_id');
+      if (!error && data) {
+        data.forEach(item => {
+          const match = item.product_id.match(/IVAR-FF-(\d+)/i);
+          if (match) highestNum = Math.max(highestNum, parseInt(match[1], 10));
+        });
+      } else {
+        const { accounts } = await readLocalDb();
+        accounts.forEach(acc => {
+          const match = acc.product_id.match(/IVAR-FF-(\d+)/i);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > highestNum) highestNum = num;
+          }
+        });
+      }
+    } catch {
+      const { accounts } = await readLocalDb();
+      accounts.forEach(acc => {
+        const match = acc.product_id.match(/IVAR-FF-(\d+)/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > highestNum) highestNum = num;
+        }
+      });
+    }
   } else {
     const { accounts } = await readLocalDb();
     accounts.forEach(acc => {
@@ -133,8 +153,7 @@ export async function getPublishedAccounts(
         return results;
       }
     } catch (err) {
-      console.error('Supabase published account query failed:', err);
-      throw err;
+      console.warn('Supabase published account query failed (falling back to local database):', err);
     }
   }
 
@@ -223,8 +242,7 @@ export async function getAccountBySlug(slug: string): Promise<Account | null> {
       }
       return null;
     } catch (err) {
-      console.error('Supabase getAccountBySlug failed:', err);
-      throw err;
+      console.warn('Supabase getAccountBySlug failed (falling back to local database):', err);
     }
   }
 
@@ -266,8 +284,7 @@ export async function getAccountById(id: string): Promise<Account | null> {
       }
       return null;
     } catch (err) {
-      console.error('Supabase getAccountById failed:', err);
-      throw err;
+      console.warn('Supabase getAccountById failed (falling back to local database):', err);
     }
   }
 
@@ -277,28 +294,32 @@ export async function getAccountById(id: string): Promise<Account | null> {
 }
 
 export async function getAccountByIdAdmin(id: string): Promise<Account | null> {
-  assertAdminPersistenceConfigured();
   const cleanId = id.trim();
   if (isSupabaseAdminConfigured()) {
-    const supabase = createAdminClient();
-    const isUuid = UUID_REGEX.test(cleanId);
-    let query = supabase
-      .from('accounts')
-      .select('*, images:account_images(*)');
+    try {
+      const supabase = createAdminClient();
+      const isUuid = UUID_REGEX.test(cleanId);
+      let query = supabase
+        .from('accounts')
+        .select('*, images:account_images(*)');
 
-    if (isUuid) {
-      query = query.or(`id.eq."${cleanId}",product_id.eq."${cleanId}",slug.eq."${cleanId}"`);
-    } else {
-      query = query.or(`product_id.eq."${cleanId}",slug.eq."${cleanId}"`);
+      if (isUuid) {
+        query = query.or(`id.eq."${cleanId}",product_id.eq."${cleanId}",slug.eq."${cleanId}"`);
+      } else {
+        query = query.or(`product_id.eq."${cleanId}",slug.eq."${cleanId}"`);
+      }
+
+      const { data, error } = await query.maybeSingle();
+
+      if (!error && data) {
+        if (data?.images) {
+          data.images.sort((a: AccountImage, b: AccountImage) => a.sort_order - b.sort_order);
+        }
+        return data as Account | null;
+      }
+    } catch (err) {
+      console.warn('Supabase getAccountByIdAdmin failed (falling back to local database):', err);
     }
-
-    const { data, error } = await query.maybeSingle();
-
-    if (error) throw new Error(`Could not load account: ${error.message}`);
-    if (data?.images) {
-      data.images.sort((a: AccountImage, b: AccountImage) => a.sort_order - b.sort_order);
-    }
-    return data as Account | null;
   }
 
   const { accounts } = await readLocalDb();
@@ -308,19 +329,29 @@ export async function getAccountByIdAdmin(id: string): Promise<Account | null> {
 
 // --- Admin Operations ---
 export async function getAllAccountsAdmin(): Promise<Account[]> {
-  assertAdminPersistenceConfigured();
   if (isSupabaseAdminConfigured()) {
-    const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from('accounts')
-      .select('*, images:account_images(*)')
-      .order('created_at', { ascending: false });
+    try {
+      const supabase = createAdminClient();
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('*, images:account_images(*)')
+        .order('created_at', { ascending: false });
 
-    if (error) throw new Error(`Could not load admin accounts: ${error.message}`);
-    data?.forEach((account: Account) => {
-      account.images?.sort((a: AccountImage, b: AccountImage) => a.sort_order - b.sort_order);
-    });
-    return data as Account[];
+      if (error) {
+        console.warn('Supabase load admin accounts warning (falling back to local database):', error.message);
+        const { accounts } = await readLocalDb();
+        return [...accounts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      }
+
+      data?.forEach((account: Account) => {
+        account.images?.sort((a: AccountImage, b: AccountImage) => a.sort_order - b.sort_order);
+      });
+      return data as Account[];
+    } catch (err) {
+      console.warn('Supabase query error (falling back to local database):', err);
+      const { accounts } = await readLocalDb();
+      return [...accounts].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
   }
 
   const { accounts } = await readLocalDb();

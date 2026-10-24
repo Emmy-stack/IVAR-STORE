@@ -1,12 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseServiceRoleKey, getSupabaseUrl } from './config';
 
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = getSupabaseUrl();
+  const serviceRoleKey = getSupabaseServiceRoleKey();
 
   if (!url || !serviceRoleKey) {
     throw new Error(
-      'Supabase admin configuration missing. Set SUPABASE_SERVICE_ROLE_KEY on the server.'
+      'Supabase admin configuration missing. Set SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY on the server.'
     );
   }
 

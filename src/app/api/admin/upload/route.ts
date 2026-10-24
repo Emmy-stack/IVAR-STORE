@@ -6,7 +6,7 @@ import {
   uploadFile,
   validateUploadMetadata,
 } from '@/lib/services/storage-service';
-import { isSupabaseAdminConfigured } from '@/lib/supabase/config';
+import { isSupabaseAdminConfigured, getSupabaseAnonKey, getSupabaseUrl } from '@/lib/supabase/config';
 
 function getAuthErrorStatus(err: unknown): number {
   if (typeof err === 'object' && err !== null && 'status' in err && typeof err.status === 'number') {
@@ -55,8 +55,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         strategy: 'signed',
         bucket,
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-        anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        supabaseUrl: getSupabaseUrl(),
+        anonKey: getSupabaseAnonKey(),
         ...signedUpload,
       });
     }

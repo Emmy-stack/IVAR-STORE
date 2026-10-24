@@ -133,7 +133,10 @@ export default function AccountForm({
 
           if (metadataResponse.ok && metadata.strategy === 'signed' && metadata.path && metadata.token) {
             const supabaseUrl = metadata.supabaseUrl || process.env.NEXT_PUBLIC_SUPABASE_URL;
-            const anonKey = metadata.anonKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+            const anonKey =
+              metadata.anonKey ||
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+              process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
             if (supabaseUrl && anonKey) {
               const supabase = createClient(supabaseUrl, anonKey);
               const { error } = await supabase.storage

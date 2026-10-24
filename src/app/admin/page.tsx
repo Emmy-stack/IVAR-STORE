@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { assertAdminOrRedirect } from '@/lib/auth';
 import { getDashboardStats } from '@/lib/services/account-service';
-import { isSupabaseConfigured } from '@/lib/supabase/config';
+import { checkSupabaseHealth } from '@/lib/supabase/config';
 import { formatNaira } from '@/lib/whatsapp';
 import {
   Layers,
@@ -15,6 +15,7 @@ import {
   Video,
   PhoneCall,
   ExternalLink,
+  AlertTriangle,
 } from 'lucide-react';
 
 export const revalidate = 0;
@@ -22,13 +23,51 @@ export const revalidate = 0;
 export default async function AdminOverviewPage() {
   await assertAdminOrRedirect();
 
-  const [stats, isSupabaseActive] = await Promise.all([
-    getDashboardStats(),
-    Promise.resolve(isSupabaseConfigured()),
+  const [stats, supabaseHealth] = await Promise.all([
+    getDashboardStats().catch(err => {
+      console.warn('Dashboard stats fallback:', err);
+      return {
+        totalListings: 0,
+        availableCount: 0,
+        reservedCount: 0,
+        soldCount: 0,
+        recentAdded: [],
+        recentUpdated: [],
+      };
+    }),
+    checkSupabaseHealth(),
   ]);
+
+  const isSupabaseActive = supabaseHealth.isConfigured && supabaseHealth.tablesExist;
 
   return (
     <div className="space-y-8 animate-in fade-in-50">
+      {/* Migration Notice Banner if Supabase tables are missing */}
+      {supabaseHealth.isConfigured && !supabaseHealth.tablesExist && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-in fade-in">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-bold text-white text-sm">Supabase Action Required: Run SQL Migration</p>
+              <p className="text-slate-300 text-xs mt-1 leading-relaxed">
+                Supabase credentials are detected, but the database tables (<code className="text-amber-300 font-mono">accounts</code>, <code className="text-amber-300 font-mono">account_images</code>, <code className="text-amber-300 font-mono">store_settings</code>) have not been created yet in your Supabase project. The store is serving local records until the schema is executed.
+              </p>
+            </div>
+          </div>
+          <a
+            href="https://supabase.com/dashboard/project/kplmdrzvkpozsjgbarmt/sql/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold text-xs shadow-lg transition-all"
+          >
+            <span>Open Supabase SQL Editor</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      )}
+
       {/* Top Welcome & Database Status Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#1E2C4A]">
         <div>
@@ -50,8 +89,13 @@ export default async function AdminOverviewPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 Supabase Connected
               </span>
+            ) : supabaseHealth.isConfigured ? (
+              <span className="font-semibold text-amber-400 flex items-center gap-1" title="Supabase keys found but SQL tables are not yet created">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Tables Pending
+              </span>
             ) : (
-              <span className="font-semibold text-yellow-400 flex items-center gap-1" title="Configure .env.local with Supabase credentials for cloud hosting">
+              <span className="font-semibold text-yellow-400 flex items-center gap-1" title="Configure Vercel environment variables with Supabase credentials">
                 <span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />
                 Local File DB
               </span>

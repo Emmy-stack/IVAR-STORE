@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { SignIn } from '@clerk/nextjs';
 import { Flame, Lock, Shield, AlertTriangle, Key, ExternalLink } from 'lucide-react';
 import { checkAdminAuth } from '@/lib/auth';
-import { isClerkConfigured } from '@/lib/clerk-config';
+import { isClerkConfigured, ADMIN_EMAIL } from '@/lib/clerk-config';
 
 export const metadata = {
   title: 'Admin Sign In — IVAR STORE',
@@ -110,7 +110,7 @@ export default async function AdminLoginPage() {
               forceRedirectUrl="/admin"
               signUpUrl={undefined}
               initialValues={{
-                emailAddress: "Enter Email"
+                emailAddress: ADMIN_EMAIL,
               }}
               appearance={{
                 variables: {
